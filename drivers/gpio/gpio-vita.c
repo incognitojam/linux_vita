@@ -259,7 +259,7 @@ err_disable_clk:
 	return ret;
 }
 
-static int vita_gpio_remove(struct platform_device *pdev)
+static void vita_gpio_remove(struct platform_device *pdev)
 {
 	struct vita_gpio_chip *vgpio = platform_get_drvdata(pdev);
 	struct device *dev = &pdev->dev;
@@ -272,8 +272,6 @@ static int vita_gpio_remove(struct platform_device *pdev)
 
 	pm_runtime_disable(dev);
 	pm_runtime_put_noidle(dev);
-
-	return 0;
 }
 
 static const struct of_device_id vita_of_ids[] = {
