@@ -261,6 +261,7 @@ __create_page_tables:
 #else
 	str	r8, [r5]			@ Save physical start of kernel (LE)
 #endif
+	mov	r11, r5				@ save PA of kernel_sec_start
 #endif
 	orr	r3, r8, r7			@ Add the MMU flags
 	add	r6, r4, r6, lsr #(SECTION_SHIFT - PMD_ENTRY_ORDER)
@@ -276,6 +277,24 @@ __create_page_tables:
 #else
 	str	r3, [r5]			@ Save physical end of kernel (LE)
 #endif
+
+	/*
+	 * Invalidate PL310 L2 cache lines for kernel_sec_start/end.
+	 * The decompressor's cache_off does not flush PL310 (which is
+	 * MMIO-controlled), so L2 may hold stale zeros from the
+	 * decompressed .data section.  Invalidate (not clean) those
+	 * lines so later cacheable reads fetch the values we just
+	 * wrote to RAM.  PL310 base on Vita is 0x1A002000.
+	 */
+	mov	r12, #0x1A000000
+	orr	r12, r12, #0x2000		@ r12 = PL310 base
+	str	r11, [r12, #0x770]		@ INV_LINE_PA: kernel_sec_start
+	str	r5, [r12, #0x770]		@ INV_LINE_PA: kernel_sec_end
+	dsb
+	mov	r11, #0
+	str	r11, [r12, #0x730]		@ L2X0_CACHE_SYNC
+	dsb
+
 #else
 	/*
 	 * Map the kernel image separately as it is not located in RAM.

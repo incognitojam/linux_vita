@@ -1186,6 +1186,28 @@ __armv4_mmu_cache_off:
 		mov	pc, lr
 
 __armv7_mmu_cache_off:
+		/*
+		 * Clean and invalidate the PL310 L2 cache.
+		 * CP15 cache ops do not propagate to PL310 (it is
+		 * MMIO-controlled), so L2 retains stale data from
+		 * decompression that corrupts the kernel's .data
+		 * section.  PL310 base on Vita is 0x1A002000.
+		 */
+		mov	r12, #0x1A000000
+		orr	r12, r12, #0x2000	@ r12 = PL310 base
+		ldr	r1, [r12, #0x104]	@ L2X0_AUX_CTRL
+		tst	r1, #(1 << 16)		@ 16-way associativity?
+		moveq	r1, #0xFF		@ 8-way mask
+		movne	r1, #0xFF
+		orrne	r1, r1, #0xFF00		@ 16-way mask
+		str	r1, [r12, #0x7FC]	@ L2X0_CLEAN_INV_WAY
+1:		ldr	r2, [r12, #0x7FC]
+		tst	r2, r2
+		bne	1b
+		mov	r2, #0
+		str	r2, [r12, #0x730]	@ L2X0_CACHE_SYNC
+		mcr	p15, 0, r2, c7, c10, 4	@ DSB
+
 		mrc	p15, 0, r0, c1, c0
 #ifdef CONFIG_MMU
 		bic	r0, r0, #0x0005
