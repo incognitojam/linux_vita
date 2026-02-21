@@ -33,7 +33,6 @@
 
 &sdif1 {
 	status = "okay";
-	non-removable;	/* SD2Vita adapter — always present, no card-detect */
 };
 
 &sdif2 {
