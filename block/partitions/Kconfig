@@ -240,6 +240,15 @@ config SUN_PARTITION
 	  given by the tar program ("man tar" or preferably "info tar"). If
 	  you don't know what all this is about, say N.
 
+config SCE_PARTITION
+	bool "PlayStation Vita SCE partition support"
+	depends on PARTITION_ADVANCED
+	help
+	  Say Y here if you would like to use the internal eMMC of a
+	  PlayStation Vita running Linux. The Vita uses a proprietary
+	  partition table format with the header
+	  "Sony Computer Entertainment Inc."
+
 config KARMA_PARTITION
 	bool "Karma Partition support"
 	depends on PARTITION_ADVANCED

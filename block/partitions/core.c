@@ -46,6 +46,9 @@ static int (*const check_part[])(struct parsed_partitions *) = {
 #ifdef CONFIG_EFI_PARTITION
 	efi_partition,		/* this must come before msdos */
 #endif
+#ifdef CONFIG_SCE_PARTITION
+	sce_partition,		/* this must come before msdos */
+#endif
 #ifdef CONFIG_SGI_PARTITION
 	sgi_partition,
 #endif
