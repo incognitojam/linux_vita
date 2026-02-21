@@ -92,6 +92,48 @@
 			reg = <0xe2030000 0x10000>;
 		};
 
+		/*
+		 * SDIF controllers — standard SDHCI.
+		 * VitaOS interrupt codes: 0xDC-0xDF (from psvcmd56 RE).
+		 * Mapping: VitaOS code = GIC hardware IRQ ID,
+		 * GIC_SPI N = hardware IRQ N+32, so SPI = code - 32.
+		 *   SDIF0: 0xDC = 220 → GIC_SPI 188
+		 *   SDIF1: 0xDD = 221 → GIC_SPI 189
+		 *   SDIF2: 0xDE = 222 → GIC_SPI 190
+		 *   SDIF3: 0xDF = 223 → GIC_SPI 191
+		 */
+		sdif0: mmc@e0b00000 {
+			compatible = "vita,sdhci";
+			reg = <0xe0b00000 0x1000>;
+			vita,bus-index = <0>;
+			interrupts = <GIC_SPI 188 IRQ_TYPE_LEVEL_HIGH>;
+			status = "disabled";
+		};
+
+		sdif1: mmc@e0c00000 {
+			compatible = "vita,sdhci";
+			reg = <0xe0c00000 0x1000>;
+			vita,bus-index = <1>;
+			interrupts = <GIC_SPI 189 IRQ_TYPE_LEVEL_HIGH>;
+			status = "disabled";
+		};
+
+		sdif2: mmc@e0c10000 {
+			compatible = "vita,sdhci";
+			reg = <0xe0c10000 0x1000>;
+			vita,bus-index = <2>;
+			interrupts = <GIC_SPI 190 IRQ_TYPE_LEVEL_HIGH>;
+			status = "disabled";
+		};
+
+		sdif3: mmc@e0c20000 {
+			compatible = "vita,sdhci";
+			reg = <0xe0c20000 0x1000>;
+			vita,bus-index = <3>;
+			interrupts = <GIC_SPI 191 IRQ_TYPE_LEVEL_HIGH>;
+			status = "disabled";
+		};
+
 		/*global_timer@1a000200 {
 			compatible = "arm,cortex-a9-global-timer";
 			reg = <0x1a000200 0x100>;

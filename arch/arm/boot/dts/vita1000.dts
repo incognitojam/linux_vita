@@ -25,3 +25,21 @@
 		};
 	};
 };
+
+/* Enable all SDIF controllers for hardware probing */
+&sdif0 {
+	status = "okay";
+};
+
+&sdif1 {
+	status = "okay";
+	non-removable;	/* SD2Vita adapter — always present, no card-detect */
+};
+
+&sdif2 {
+	status = "okay";
+};
+
+&sdif3 {
+	status = "okay";
+};
