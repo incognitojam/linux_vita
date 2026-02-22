@@ -2,6 +2,7 @@
 // Copyright (C) 2021 Sergi Granell
 
 #include <linux/module.h>
+#include <linux/delay.h>
 #include <linux/interrupt.h>
 #include <linux/spi/spi.h>
 #include <linux/of.h>
@@ -9,6 +10,7 @@
 #include <linux/of_irq.h>
 #include <linux/mfd/core.h>
 #include <linux/mfd/vita-syscon.h>
+#include <linux/reboot.h>
 
 static const struct mfd_cell vita_syscon_devs[] = {
 	{
@@ -177,6 +179,53 @@ static int vita_syscon_scratchpad_write(struct vita_syscon *syscon, u16 offset, 
 	return vita_syscon_transfer(syscon, tx, rx, sizeof(rx));
 }
 
+/*
+ * Power management via direct SPI to Ernie.
+ *
+ * The TrustZone Secure Monitor (SMC 0x11A) normally handles these commands,
+ * but after Linux reconfigures the GIC and SPI controller, the Monitor can
+ * no longer function.  Analysis of the Monitor's handler reveals it sends
+ * raw SPI commands that differ from the VitaOS kernel-level command 0x0C:
+ *
+ *   Cold reset:  cmd=0x0801, data={0x00}      — works from Linux
+ *   Power off:   cmd=0x00C0, data={type, ...}  — rejected (result 0x3B)
+ *   Hibernate:   cmd=0x00C2, data={0x5A}       — untested
+ *   Ext boot:    cmd=0x00C1, data={0x00}       — untested
+ *
+ * Before issuing cold reset, we power off removable media via syscon so
+ * VitaOS finds the controllers in a clean state on the next boot.
+ */
+static int vita_syscon_reboot_notify(struct notifier_block *nb,
+				     unsigned long action, void *data)
+{
+	struct vita_syscon *syscon = container_of(nb, struct vita_syscon,
+						  reboot_nb);
+	int ret;
+
+	if (action != SYS_RESTART && action != SYS_POWER_OFF &&
+	    action != SYS_HALT)
+		return NOTIFY_DONE;
+
+	/*
+	 * Power off peripherals before cold reset so VitaOS finds them in
+	 * a clean state on the next boot.  Without this, the Sony memory
+	 * card (MSIF) stays half-initialized and VitaOS can't mount it.
+	 *
+	 * 0x89B = memory card (MSIF) power, 0x888 = game card slot power.
+	 */
+	vita_syscon_short_command_write(syscon, 0x89B, 0, 2);
+	vita_syscon_short_command_write(syscon, 0x888, 0, 2);
+
+	/* Cold reset: cmd 0x0801, 1 arg byte (0x00) */
+	ret = vita_syscon_short_command_write(syscon, 0x0801, 0x00, 2);
+	if (ret)
+		pr_emerg("vita-syscon: cold reset failed: %d\n", ret);
+
+	mdelay(5000);
+
+	return NOTIFY_DONE;
+}
+
 static irqreturn_t vita_syscon_rx_gpio_irq_handler(int irq, void *dev_id)
 {
 	struct vita_syscon *syscon = dev_id;
@@ -257,6 +306,12 @@ static int vita_syscon_probe(struct spi_device *spi)
 		return ret;
 	}
 	memcpy(syscon->hardware_flags, &hw_flags[SYSCON_RX_DATA], sizeof(syscon->hardware_flags));
+
+	syscon->reboot_nb.notifier_call = vita_syscon_reboot_notify;
+	syscon->reboot_nb.priority = 255;
+	ret = register_reboot_notifier(&syscon->reboot_nb);
+	if (ret)
+		dev_warn(&spi->dev, "failed to register reboot notifier: %d\n", ret);
 
 	return devm_mfd_add_devices(syscon->dev, PLATFORM_DEVID_NONE,
 				    vita_syscon_devs, ARRAY_SIZE(vita_syscon_devs),

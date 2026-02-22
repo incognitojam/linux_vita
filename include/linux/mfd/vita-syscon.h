@@ -43,6 +43,8 @@ struct vita_syscon {
 	u32 baryon_version;
 	u32 hardware_info;
 	u8 hardware_flags[16];
+	/* Reboot */
+	struct notifier_block reboot_nb;
 };
 
 #endif /*  __LINUX_MFD_VITA_SYSCON_H */
