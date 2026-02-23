@@ -10,7 +10,11 @@
  * of the GNU General Public License, incorporated herein by reference.
  */
 
+/* Work around macOS defining uuid_t in system headers */
+#define _UUID_T
+#define uuid_t int
 #include "modpost.h"
+#undef uuid_t
 #include "devicetable-offsets.h"
 
 /* We use the ELF typedefs for kernel_ulong_t but bite the bullet and
