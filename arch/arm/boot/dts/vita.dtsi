@@ -73,11 +73,11 @@
 		      <0x1a000100 0x1000>;
 	};
 
-	refclk144mhz: refclk144mkhz {
+	refclk144mhz: refclk144mhz {
 		compatible = "fixed-clock";
 		#clock-cells = <0>;
 		clock-frequency = <144000000>;
-		clock-output-names = "refclk144khz";
+		clock-output-names = "refclk144mhz";
 	};
 
 	soc {
