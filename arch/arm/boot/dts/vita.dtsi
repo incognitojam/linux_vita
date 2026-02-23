@@ -31,28 +31,36 @@
 			device_type = "cpu";
 			compatible = "arm,cortex-a9";
 			reg = <0>;
+			clocks = <&cpu_clk>;
 			clock-frequency = <333000000>;
+			operating-points-v2 = <&cpu_opp_table>;
 		};
 
 		cpu@1 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a9";
 			reg = <1>;
+			clocks = <&cpu_clk>;
 			clock-frequency = <333000000>;
+			operating-points-v2 = <&cpu_opp_table>;
 		};
 
 		cpu@2 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a9";
 			reg = <2>;
+			clocks = <&cpu_clk>;
 			clock-frequency = <333000000>;
+			operating-points-v2 = <&cpu_opp_table>;
 		};
 
 		cpu@3 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a9";
 			reg = <3>;
+			clocks = <&cpu_clk>;
 			clock-frequency = <333000000>;
+			operating-points-v2 = <&cpu_opp_table>;
 		};
 	};
 
@@ -75,6 +83,22 @@
 		interrupt-controller;
 		reg = <0x1a001000 0x1000>,
 		      <0x1a000100 0x1000>;
+	};
+
+	cpu_clk: cpu-clock {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <333000000>;
+		clock-output-names = "cpu_clk";
+	};
+
+	cpu_opp_table: opp-table {
+		compatible = "operating-points-v2";
+		opp-shared;
+
+		opp-333000000 {
+			opp-hz = /bits/ 64 <333000000>;
+		};
 	};
 
 	refclk144mhz: refclk144mhz {
